@@ -21,6 +21,8 @@ const allCornerstoneEvents = ['click', 'cornerstonetoolsmousedown', 'cornerstone
     'cornerstonetoolsmousewheel', 'cornerstonetoolsdoubletap', 'cornerstonetoolstouchpress',
     'cornerstonetoolsmultitouchstart', 'cornerstonetoolsmultitouchstartactive', 'cornerstonetoolsmultitouchdrag'];
 
+const PLUGIN_CORNERSTONE = 'cornerstone';
+
 /**
  * This function loads a study series into a viewport element.
  *
@@ -115,7 +117,8 @@ const loadDisplaySetIntoViewport = (data, templateData) => {
         displaySetInstanceUid,
         currentImageIdIndex,
         viewport: viewport || data.viewport,
-        viewportIndex
+        viewportIndex,
+        plugin: PLUGIN_CORNERSTONE
     };
 
     // Handle the case where the imageId isn't loaded correctly and the

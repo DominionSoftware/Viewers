@@ -1,4 +1,5 @@
-import { Meteor } from 'meteor/meteor';import { Blaze } from 'meteor/blaze';
+import { Meteor } from 'meteor/meteor';
+import { Blaze } from 'meteor/blaze';
 import { Session } from 'meteor/session';
 import { Tracker } from 'meteor/tracker';
 import { Template } from 'meteor/templating';
@@ -6,6 +7,8 @@ import { _ } from 'meteor/underscore';
 import { $ } from 'meteor/jquery';
 
 import { OHIF } from 'meteor/ohif:core';
+
+const PLUGIN_CORNERSTONE = 'cornerstone';
 
 let isInteractingWithViewport = false;
 Meteor.startup(() => {
@@ -121,7 +124,8 @@ export class LayoutManager {
                 studyInstanceUid,
                 seriesInstanceUid,
                 displaySetInstanceUid,
-                sopInstanceUid
+                sopInstanceUid,
+                plugin: PLUGIN_CORNERSTONE
             };
 
             additionalData.push(data);
@@ -181,6 +185,12 @@ export class LayoutManager {
             this.setDefaultViewportData();
         }
 
+        this.viewportData.forEach(data => {
+            if (!data.plugin) {
+                data.plugin = PLUGIN_CORNERSTONE;
+            }
+        })
+
         // imageViewerViewports occasionally needs relevant layout data in order to set
         // the element style of the viewport in question
         const layoutProps = this.layoutProps;
@@ -218,8 +228,7 @@ export class LayoutManager {
         OHIF.log.info(`LayoutManager rerenderViewportWithNewDisplaySet: ${viewportIndex}`);
 
         // The parent container is identified because it is later removed from the DOM
-        const element = $('.imageViewerViewport').eq(viewportIndex);
-        const container = element.parents('.viewportContainer').get(0);
+        const container = $('.viewportContainer').get(viewportIndex);
 
         // Record the current viewportIndex so this can be passed into the re-rendering call
         data.viewportIndex = viewportIndex;
@@ -231,26 +240,36 @@ export class LayoutManager {
             seriesInstanceUid: data.seriesInstanceUid,
             studyInstanceUid: data.studyInstanceUid,
             renderedCallback: data.renderedCallback,
-            currentImageIdIndex: data.currentImageIdIndex || 0
+            currentImageIdIndex: data.currentImageIdIndex || 0,
+            plugin: data.plugin,
         };
 
-        // Remove the hover styling
-        element.find('canvas').not('.magnifyTool').removeClass('faded');
-
-        // Remove the whole template, add in the new one
-        const viewportContainer = element.parents('.removable');
-
         const newViewportContainer = document.createElement('div');
-        newViewportContainer.className = 'removable';
-
-        // Remove the parent element of the template
-        // This is a workaround since otherwise Blaze UI onDestroyed doesn't fire
-        viewportContainer.remove();
-
-        container.appendChild(newViewportContainer);
 
         // Render and insert the template
-        Blaze.renderWithData(Template.imageViewerViewport, data, newViewportContainer);
+        if (data.plugin === PLUGIN_CORNERSTONE) {
+            // Remove the hover styling
+            element.find('canvas').not('.magnifyTool').removeClass('faded');
+
+            // Remove the whole template, add in the new one
+            const viewportContainer = element.parents('.removable');
+
+            newViewportContainer.className = 'removable';
+
+            // Remove the parent element of the template
+            // This is a workaround since otherwise Blaze UI onDestroyed doesn't fire
+            viewportContainer.remove();
+
+            container.appendChild(newViewportContainer);
+
+            Blaze.renderWithData(Template.imageViewerViewport, data, newViewportContainer);
+        } else {
+            newViewportContainer.className = `viewport-plugin-${data.plugin}`;
+
+            console.warn('Empty container added for Plugin to override');
+            container.innerHTML = '';
+            container.appendChild(newViewportContainer);
+        }
 
         this.updateSession();
     }
