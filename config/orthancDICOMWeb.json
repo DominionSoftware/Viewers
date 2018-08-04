@@ -28,7 +28,7 @@
         "displaySetNavigationLoopOverSeries": false,
         "displaySetNavigationMultipleViewports": true,
         "autoPositionMeasurementsTextCallOuts": "TRLB",
-        "studyListDateFilterNumDays": 1
+        "studyListDateFilterNumDays": 100000
     }
   },
   "proxy": {
